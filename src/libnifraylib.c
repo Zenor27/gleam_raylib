@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include <raylib.h>
 #include <erl_nif.h>
 
@@ -43,19 +44,24 @@ static ERL_NIF_TERM EndDrawing_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM 
     return enif_make_int(env, 0);
 }
 
-static ERL_NIF_TERM ClearBackground_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+Color tuple_to_color(ErlNifEnv* env, const ERL_NIF_TERM tuple)
 {
     const long unsigned int *color = {0};
     int arity = 0;
-    if (!enif_get_tuple(env, argv[0], &arity, &color)) {
-        return enif_make_badarg(env);
-    }
+    enif_get_tuple(env, tuple, &arity, &color);
+    assert(arity == 4);
     Color c = {
         .r = color[0],
         .g = color[1],
         .b = color[2],
         .a = color[3],
     };
+    return c;
+}
+
+static ERL_NIF_TERM ClearBackground_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+{
+    Color c = tuple_to_color(env, argv[0]);
     ClearBackground(c);
     return enif_make_int(env, 0);
 }
@@ -77,17 +83,7 @@ static ERL_NIF_TERM DrawRectangle_nif(ErlNifEnv* env, int argc, const ERL_NIF_TE
         return enif_make_badarg(env);
     }
 
-    const long unsigned int *color = {0};
-    int arity = 0;
-    if (!enif_get_tuple(env, argv[4], &arity, &color)) {
-        return enif_make_badarg(env);
-    }
-    Color c = {
-        .r = color[0],
-        .g = color[1],
-        .b = color[2],
-        .a = color[3],
-    };
+    Color c = tuple_to_color(env, argv[4]);
     DrawRectangle(posX, posY, width, height, c);
     return enif_make_int(env, 0);
 }
